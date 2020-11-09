@@ -13,3 +13,8 @@
 .DS_Store
 .idea/*
 Dockerfile
+
+#secret files from google
+cmd/credentials.json
+cmd/token.json
+
