@@ -15,6 +15,10 @@
 Dockerfile
 
 #secret files from google
-cmd/credentials.json
+credentials.json
 cmd/token.json
+token.json
+
+*.pdf
+*.xls
 

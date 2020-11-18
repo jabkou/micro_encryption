@@ -7,6 +7,7 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/drive/v3"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -75,7 +76,7 @@ func validateUser() (*oauth2.Config, error){
 	}
 
 	// If modifying these scopes, delete your previously saved token.json.
-	config, err := google.ConfigFromJSON(b, drive.DriveMetadataReadonlyScope)
+	config, err := google.ConfigFromJSON(b, drive.DriveScope)
 	if err != nil {
 		log.Fatalf("Unable to parse client secret file to config: %v", err)
 	}
@@ -94,11 +95,72 @@ func getUser() (*drive.Service, error){
 	return srv, err
 }
 
+func createDir(service *drive.Service, name string, parentId string) (*drive.File, error) {
+	d := &drive.File{
+		Name:     name,
+		MimeType: "application/vnd.google-apps.folder",
+		Parents:  []string{parentId},
+	}
+
+	file, err := service.Files.Create(d).Do()
+
+	if err != nil {
+		log.Println("Could not create dir: " + err.Error())
+		return nil, err
+	}
+
+	return file, nil
+}
+
+func createFile(service *drive.Service, name string, mimeType string, content io.Reader, parentId string) (*drive.File, error) {
+	f := &drive.File{
+		MimeType: mimeType,
+		Name:     name,
+		Parents:  []string{parentId},
+	}
+	file, err := service.Files.Create(f).Media(content).Do()
+
+	if err != nil {
+		log.Println("Could not create file: " + err.Error())
+		return nil, err
+	}
+
+	return file, nil
+}
+
+func getService() (*drive.Service, error) {
+	b, err := ioutil.ReadFile("credentials.json")
+	if err != nil {
+		fmt.Printf("Unable to read credentials.json file. Err: %v\n", err)
+		return nil, err
+	}
+
+	// If modifying these scopes, delete your previously saved token.json.
+	config, err := google.ConfigFromJSON(b, drive.DriveScope)
+
+	if err != nil {
+		return nil, err
+	}
+
+	client := getClient(config)
+
+	service, err := drive.New(client)
+
+	if err != nil {
+		fmt.Printf("Cannot create the Google Drive service: %v\n", err)
+		return nil, err
+	}
+
+	return service, err
+}
+
 type Service interface {
 	//Status(ctx context.Context) (string, error)
 	//Get(ctx context.Context) (string, error)
 	//Validate(ctx context.Context, date string) (bool, error)
 	Files(ctx context.Context) (string, error)
+	Upload(ctx context.Context, fileName string) (string, error)
+	Download(ctx context.Context, fileId string) (string, error)
 }
 
 type googService struct{}
@@ -106,25 +168,6 @@ type googService struct{}
 func NewService() Service {
 	return googService{}
 }
-
-//func (googService) Status(ctx context.Context) (string, error) {
-//	return "ok", nil
-//}
-
-//func (googService) Get(ctx context.Context) (string, error) {
-//	now := time.Now()
-//	return now.Format("02-01-2006"), nil
-//}
-
-//func (googService) Validate(ctx context.Context, date string) (bool, error) {
-//	_, err := time.Parse("02/01/2006", date)
-//	if err != nil {
-//		return false, err
-//	}
-//	return true, nil
-//}
-
-
 
 func (googService) Files(ctx context.Context) (string, error) {
 
@@ -144,4 +187,81 @@ func (googService) Files(ctx context.Context) (string, error) {
 		}
 	}
 	return "files", nil
+}
+
+func (googService) Upload(ctx context.Context, fileName string) (string, error) {
+
+	// Step 1. Open the file
+	f, err := os.Open(fileName)
+
+	if err != nil {
+		panic(fmt.Sprintf("cannot open file: %v", err))
+	}
+
+	defer f.Close()
+	buffer := make([]byte, 512)
+
+	// Step 2. Get the Google Drive service
+	service, err := getService()
+
+	// Step 3. Create the directory
+	dir, err := createDir(service, "My Folder", "root")
+
+	if err != nil {
+		panic(fmt.Sprintf("Could not create dir: %v\n", err))
+	}
+
+	// Step 4. Create the file and upload its content
+
+	file, err := createFile(service, fileName, http.DetectContentType(buffer), f, dir.Id)
+
+	if err != nil {
+		panic(fmt.Sprintf("Could not create file: %v\n", err))
+	}
+
+	fmt.Printf("File '%s' successfully uploaded in '%s' directory", file.Name,  dir.Name)
+	return "ukk", nil
+}
+
+func (googService) Download(ctx context.Context, fileId string) (string, error) {
+
+	//fileId := "1BIiF3Fgi3c7Rn9Tms-LWjR9CahBiKJZN"
+
+	srv, err := getUser()
+	if err != nil {
+		panic(fmt.Sprintf("Could not cget user: %v\n", err))
+	}
+
+	file, _ := srv.Files.Get(fileId).Do()
+
+	fmt.Println("Downloading file...")
+
+	f, err := os.Create(file.Name)
+	if err != nil {
+		fmt.Printf("create file: %v", err)
+
+	}
+	defer f.Close()
+
+	tok, _ := tokenFromFile("token.json")
+
+	req, err := http.NewRequest("GET", "https://www.googleapis.com/drive/v3/files/" + fileId + "?alt=media", nil)
+
+	// add authorization header to the req
+	req.Header.Add("Authorization", tok.TokenType + " " + tok.AccessToken)
+
+	// Send req using http Client
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Println("Error on response.\n[ERRO] -", err)
+	}
+
+	_, err = io.Copy(f, resp.Body)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(resp.Status)
+
+	return "dkk", nil
 }

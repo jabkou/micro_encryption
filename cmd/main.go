@@ -30,10 +30,9 @@ func main() {
 
 	// mapping endpoints
 	endpoints := microE.Endpoints{
-		//GetEndpoint:      microE.MakeGetEndpoint(srv),
-		//StatusEndpoint:   microE.MakeStatusEndpoint(srv),
-		//ValidateEndpoint: microE.MakeValidateEndpoint(srv),
-		FilesEndpoint: 	  microE.MakeFilesEndpoint(srv),
+		FilesEndpoint:		microE.MakeFilesEndpoint(srv),
+		UploadEndpoint:		microE.MakeUploadEndpoint(srv),
+		DownloadEndpoint:	microE.MakeDownloadEndpoint(srv),
 	}
 
 	// HTTP transport
