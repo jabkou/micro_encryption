@@ -10,16 +10,16 @@ import (
 	"os/signal"
 	"syscall"
 
-	"microE"
+	"microE/EncryptionMicroservice"
 )
 
 func main() {
 	var (
-		httpAddr = flag.String("http", ":8080", "http listen address")
+		httpAddr = flag.String("http", ":8088", "http listen address")
 	)
 	flag.Parse()
 	ctx := context.Background()
-	srv := GoogleMicroservice.NewService()
+	srv := encryptionMicroservice.NewService()
 	errChan := make(chan error)
 
 	go func() {
@@ -29,16 +29,14 @@ func main() {
 	}()
 
 	// mapping endpoints
-	endpoints := GoogleMicroservice.Endpoints{
-		FilesEndpoint:		GoogleMicroservice.MakeFilesEndpoint(srv),
-		UploadEndpoint:		GoogleMicroservice.MakeUploadEndpoint(srv),
-		DownloadEndpoint:	GoogleMicroservice.MakeDownloadEndpoint(srv),
+	endpoints := encryptionMicroservice.Endpoints{
+		TemplateEndpoint:		encryptionMicroservice.MakeTemplateEndpoint(srv),
 	}
 
 	// HTTP transport
 	go func() {
-		log.Println("microE is listening on port:", *httpAddr)
-		handler := GoogleMicroservice.NewHTTPServer(ctx, endpoints)
+		log.Println("EncryptionMicroservice is listening on port:", *httpAddr)
+		handler := encryptionMicroservice.NewHTTPServer(ctx, endpoints)
 		errChan <- http.ListenAndServe(*httpAddr, handler)
 	}()
 

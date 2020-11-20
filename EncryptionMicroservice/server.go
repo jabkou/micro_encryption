@@ -1,4 +1,4 @@
-package GoogleMicroservice
+package encryptionMicroservice
 
 import (
 	"context"
@@ -12,19 +12,9 @@ func NewHTTPServer(ctx context.Context, endpoints Endpoints) http.Handler {
 	r := mux.NewRouter()
 	r.Use(commonMiddleware) // @see https://stackoverflow.com/a/51456342
 
-	r.Methods("GET").Path("/files").Handler(httptransport.NewServer(
-		endpoints.FilesEndpoint,
-		decodeFilesRequest,
-		encodeResponse))
-
-	r.Methods("GET").Path("/upload").Handler(httptransport.NewServer(
-		endpoints.UploadEndpoint,
-		decodeUploadRequest,
-		encodeResponse))
-
-	r.Methods("GET").Path("/download").Handler(httptransport.NewServer(
-		endpoints.DownloadEndpoint,
-		decodeDownloadRequest,
+	r.Methods("GET").Path("/template").Handler(httptransport.NewServer(
+		endpoints.TemplateEndpoint,
+		decodeTemplateRequest,
 		encodeResponse))
 
 	return r
