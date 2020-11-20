@@ -37,7 +37,7 @@ func main() {
 
 	// HTTP transport
 	go func() {
-		log.Println("microE is listening on port:", *httpAddr)
+		log.Println("GoogleMicroservice is listening on port:", *httpAddr)
 		handler := GoogleMicroservice.NewHTTPServer(ctx, endpoints)
 		errChan <- http.ListenAndServe(*httpAddr, handler)
 	}()
