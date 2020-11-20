@@ -10,7 +10,7 @@ import (
 type filesRequest struct {}
 
 type filesResponse struct {
-	Files string `json:"fil"`
+	Files [2][]string `json:"files"`
 }
 
 type uploadRequest struct {
@@ -28,15 +28,6 @@ type downloadRequest struct {
 type downloadResponse struct {
 	Download string `json:"downloadResponse"`
 }
-
-//func decodeValidateRequest(ctx context.Context, r *http.Request) (interface{}, error) {
-//	var req validateRequest
-//	err := json.NewDecoder(r.Body).Decode(&req)
-//	if err != nil {
-//		return nil, err
-//	}
-//	return req, nil
-//}
 
 func decodeFilesRequest(ctx context.Context, r *http.Request) (interface{}, error ) {
 	var req filesRequest

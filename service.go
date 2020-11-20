@@ -13,6 +13,11 @@ import (
 	"net/http"
 	"os"
 )
+
+type Pair struct {
+	name string
+	id string
+}
 // Retrieve a token, saves the token, then returns the generated client.
 func getClient(config *oauth2.Config) *http.Client {
 	// The file token.json stores the user's access and refresh tokens, and is
@@ -155,10 +160,7 @@ func getService() (*drive.Service, error) {
 }
 
 type Service interface {
-	//Status(ctx context.Context) (string, error)
-	//Get(ctx context.Context) (string, error)
-	//Validate(ctx context.Context, date string) (bool, error)
-	Files(ctx context.Context) (string, error)
+	Files(ctx context.Context) ([2][]string, error)
 	Upload(ctx context.Context, fileName string) (string, error)
 	Download(ctx context.Context, fileId string) (string, error)
 }
@@ -169,9 +171,11 @@ func NewService() Service {
 	return googService{}
 }
 
-func (googService) Files(ctx context.Context) (string, error) {
+func (googService) Files(ctx context.Context) ([2][]string, error) {
 
 	srv, err := getUser()
+
+	var temp [2][]string
 
 	r, err := srv.Files.List().PageSize(10).
 		Fields("nextPageToken, files(id, name)").Do()
@@ -184,9 +188,11 @@ func (googService) Files(ctx context.Context) (string, error) {
 	} else {
 		for _, i := range r.Files {
 			fmt.Printf("%s (%s)\n", i.Name, i.Id)
+			temp[0] = append(temp[0], i.Name)
+			temp[1] = append(temp[1], i.Id)
 		}
 	}
-	return "files", nil
+	return temp, nil
 }
 
 func (googService) Upload(ctx context.Context, fileName string) (string, error) {
