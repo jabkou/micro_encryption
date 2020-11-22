@@ -6,16 +6,36 @@ import (
 	"net/http"
 )
 
-type templateRequest struct {}
+//type templateRequest struct {}
 
-type templateResponse struct {
-	Template string `json:"template"`
+type encryptionRequest struct {}
+
+type decryptionRequest struct {}
+
+//type templateResponse struct {
+//	Template string `json:"template"`
+//}
+
+type encryptionResponse struct {
+	Encryption string `json:"encryption"`
 }
 
+type decryptionResponse struct {
+	Decryption string `json:"decryption"`
+}
 
+//func decodeTemplateRequest(ctx context.Context, r *http.Request) (interface{}, error ) {
+//	var req templateRequest
+//	return req, nil
+//}
 
-func decodeTemplateRequest(ctx context.Context, r *http.Request) (interface{}, error ) {
-	var req templateRequest
+func decodeEncryptionRequest(ctx context.Context, r *http.Request) (interface{}, error ) {
+	var req encryptionRequest
+	return req, nil
+}
+
+func decodeDecryptionRequest(ctx context.Context, r *http.Request) (interface{}, error ) {
+	var req decryptionRequest
 	return req, nil
 }
 

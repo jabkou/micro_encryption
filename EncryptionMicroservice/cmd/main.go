@@ -30,7 +30,9 @@ func main() {
 
 	// mapping endpoints
 	endpoints := encryptionMicroservice.Endpoints{
-		TemplateEndpoint:		encryptionMicroservice.MakeTemplateEndpoint(srv),
+		//TemplateEndpoint:		encryptionMicroservice.MakeTemplateEndpoint(srv),
+		EncryptEndpoint:		encryptionMicroservice.MakeEncryptionEndpoint(srv),
+		DecryptEndpoint:		encryptionMicroservice.MakeDecryptionEndpoint(srv),
 	}
 
 	// HTTP transport
