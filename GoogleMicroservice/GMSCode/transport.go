@@ -1,4 +1,4 @@
-package GoogleMicroservice
+package GMSCode
 
 import (
 	"context"

@@ -5,12 +5,11 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"microE/GMSCode"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
-
-	"microE"
 )
 
 func main() {
@@ -19,7 +18,7 @@ func main() {
 	)
 	flag.Parse()
 	ctx := context.Background()
-	srv := GoogleMicroservice.NewService()
+	srv := GMSCode.NewService()
 	errChan := make(chan error)
 
 	go func() {
@@ -29,16 +28,16 @@ func main() {
 	}()
 
 	// mapping endpoints
-	endpoints := GoogleMicroservice.Endpoints{
-		FilesEndpoint:		GoogleMicroservice.MakeFilesEndpoint(srv),
-		UploadEndpoint:		GoogleMicroservice.MakeUploadEndpoint(srv),
-		DownloadEndpoint:	GoogleMicroservice.MakeDownloadEndpoint(srv),
+	endpoints := GMSCode.Endpoints{
+		FilesEndpoint:    GMSCode.MakeFilesEndpoint(srv),
+		UploadEndpoint:   GMSCode.MakeUploadEndpoint(srv),
+		DownloadEndpoint: GMSCode.MakeDownloadEndpoint(srv),
 	}
 
 	// HTTP transport
 	go func() {
 		log.Println("GoogleMicroservice is listening on port:", *httpAddr)
-		handler := GoogleMicroservice.NewHTTPServer(ctx, endpoints)
+		handler := GMSCode.NewHTTPServer(ctx, endpoints)
 		errChan <- http.ListenAndServe(*httpAddr, handler)
 	}()
 
