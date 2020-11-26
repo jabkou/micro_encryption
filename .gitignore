@@ -12,7 +12,7 @@
 
 .DS_Store
 .idea/*
-Dockerfile
+
 
 #secret files from google
 credentials.json
