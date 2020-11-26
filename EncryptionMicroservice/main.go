@@ -5,12 +5,11 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"microE/EncryptionMicroservice/EMSCode"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
-
-	"microE/EncryptionMicroservice"
 )
 
 func main() {
@@ -19,7 +18,7 @@ func main() {
 	)
 	flag.Parse()
 	ctx := context.Background()
-	srv := encryptionMicroservice.NewService()
+	srv := EMSCode.NewService()
 	errChan := make(chan error)
 
 	go func() {
@@ -29,16 +28,16 @@ func main() {
 	}()
 
 	// mapping endpoints
-	endpoints := encryptionMicroservice.Endpoints{
-		//TemplateEndpoint:		encryptionMicroservice.MakeTemplateEndpoint(srv),
-		EncryptEndpoint:		encryptionMicroservice.MakeEncryptionEndpoint(srv),
-		DecryptEndpoint:		encryptionMicroservice.MakeDecryptionEndpoint(srv),
+	endpoints := EMSCode.Endpoints{
+		TemplateEndpoint: EMSCode.MakeTemplateEndpoint(srv),
+		EncryptEndpoint:  EMSCode.MakeEncryptionEndpoint(srv),
+		DecryptEndpoint:  EMSCode.MakeDecryptionEndpoint(srv),
 	}
 
 	// HTTP transport
 	go func() {
 		log.Println("EncryptionMicroservice is listening on port:", *httpAddr)
-		handler := encryptionMicroservice.NewHTTPServer(ctx, endpoints)
+		handler := EMSCode.NewHTTPServer(ctx, endpoints)
 		errChan <- http.ListenAndServe(*httpAddr, handler)
 	}()
 

@@ -1,11 +1,10 @@
-package encryptionMicroservice
+package EMSCode
 
 import (
 	"context"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"fmt"
 	"golang.org/x/crypto/scrypt"
 	"io"
 	"io/ioutil"
@@ -14,9 +13,9 @@ import (
 )
 
 type Service interface {
-	//Template(ctx context.Context) (string, error)
-	Encrypt(ctx context.Context) (string, error)
-	Decrypt(ctx context.Context) (string, error)
+	Template(ctx context.Context) (string, error)
+	Encrypt(ctx context.Context, route string, filename string, password string) (string, error)
+	Decrypt(ctx context.Context, route string, filename string, password string) (string, error)
 }
 
 type googService struct{}
@@ -25,18 +24,19 @@ func NewService() Service {
 	return googService{}
 }
 
-//func (googService) Template(ctx context.Context) (string, error) {
-//
-//	return "template", nil
-//}
+func (googService) Template(ctx context.Context) (string, error) {
 
-func DeriveKey(password, salt []byte) ([]byte, []byte, error) {
+	return "template", nil
+}
+
+func DeriveKey(password, salt []byte, route string) ([]byte, []byte, error) {
 	if salt == nil {
 		salt = make([]byte, 32)
 		if _, err := rand.Read(salt); err != nil {
 			return nil, nil, err
 		}
-		_ = ioutil.WriteFile("salt", salt, 0777)
+		saltPath := route+"/salt"
+		_ = ioutil.WriteFile(saltPath, salt, 0777)
 	}
 	key, err := scrypt.Key(password, salt, 1048576, 8, 1, 32)
 	if err != nil {
@@ -45,9 +45,10 @@ func DeriveKey(password, salt []byte) ([]byte, []byte, error) {
 	return key, salt, nil
 }
 
-func (googService) Encrypt(ctx context.Context) (string, error) {
+func (googService) Encrypt(ctx context.Context, route string, filename string, password string) (string, error) {
 
-	infile, err := os.Open("file.txt")
+	fullPath := route+"/"+filename
+	infile, err := os.Open(fullPath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -60,12 +61,11 @@ func (googService) Encrypt(ctx context.Context) (string, error) {
 	//	log.Fatal(err)
 	//}
 
-	pass := []byte("mysecretpassword")
-	key, salt, err := DeriveKey(pass, nil)
+	pass := []byte(password)
+	key, _, err := DeriveKey(pass, nil, route)
 	if err != nil {
 		return "", err
 	}
-	println(salt)
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -79,7 +79,8 @@ func (googService) Encrypt(ctx context.Context) (string, error) {
 		log.Fatal(err)
 	}
 
-	outfile, err := os.OpenFile("ciphertext.bin", os.O_RDWR|os.O_CREATE, 0777)
+	outfilePath := route+"/"+filename+".bin"
+	outfile, err := os.OpenFile(outfilePath, os.O_RDWR|os.O_CREATE, 0777)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -111,9 +112,11 @@ func (googService) Encrypt(ctx context.Context) (string, error) {
 	return "template", nil
 }
 
-func (googService) Decrypt(ctx context.Context) (string, error) {
+func (googService) Decrypt(ctx context.Context, route string, filename string, password string) (string, error) {
 
-	infile, err := os.Open("ciphertext.bin")
+	fullPath := route+"/"+filename
+
+	infile, err := os.Open(fullPath+".bin")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -122,10 +125,10 @@ func (googService) Decrypt(ctx context.Context) (string, error) {
 	// The key should be 16 bytes (AES-128), 24 bytes (AES-192) or
 	// 32 bytes (AES-256)
 
-	pass := []byte("mysecretpassword")
-	dat, _ := ioutil.ReadFile("salt")
-	fmt.Println(dat)
-	key, _, err := DeriveKey(pass, dat)
+	pass := []byte(password)
+	saltPath := route+"/salt"
+	dat, _ := ioutil.ReadFile(saltPath)
+	key, _, err := DeriveKey(pass, dat, route)
 	if err != nil {
 		return "", err
 	}
@@ -148,7 +151,7 @@ func (googService) Decrypt(ctx context.Context) (string, error) {
 		log.Fatal(err)
 	}
 
-	outfile, err := os.OpenFile("ecntext.txt", os.O_RDWR|os.O_CREATE, 0777)
+	outfile, err := os.OpenFile(fullPath, os.O_RDWR|os.O_CREATE, 0777)
 	if err != nil {
 		log.Fatal(err)
 	}
