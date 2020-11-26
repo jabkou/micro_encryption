@@ -29,7 +29,7 @@ func main() {
 
 	// mapping endpoints
 	endpoints := EMSCode.Endpoints{
-		TemplateEndpoint: EMSCode.MakeTemplateEndpoint(srv),
+		//TemplateEndpoint: EMSCode.MakeTemplateEndpoint(srv),
 		EncryptEndpoint:  EMSCode.MakeEncryptionEndpoint(srv),
 		DecryptEndpoint:  EMSCode.MakeDecryptionEndpoint(srv),
 	}

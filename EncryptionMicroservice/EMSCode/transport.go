@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-type templateRequest struct {}
+//type templateRequest struct {}
 
 type encryptionRequest struct {
 	Route string `json:"route"`
@@ -21,9 +21,9 @@ type decryptionRequest struct {
 	Password string `json:"password"`
 }
 
-type templateResponse struct {
-	Template string `json:"template"`
-}
+//type templateResponse struct {
+//	Template string `json:"template"`
+//}
 
 type encryptionResponse struct {
 	Encryption string `json:"encryption"`
@@ -33,10 +33,10 @@ type decryptionResponse struct {
 	Decryption string `json:"decryption"`
 }
 
-func decodeTemplateRequest(ctx context.Context, r *http.Request) (interface{}, error ) {
-	var req templateRequest
-	return req, nil
-}
+//func decodeTemplateRequest(ctx context.Context, r *http.Request) (interface{}, error ) {
+//	var req templateRequest
+//	return req, nil
+//}
 
 func decodeEncryptionRequest(ctx context.Context, r *http.Request) (interface{}, error ) {
 	var req encryptionRequest

@@ -13,7 +13,7 @@ import (
 )
 
 type Service interface {
-	Template(ctx context.Context) (string, error)
+	//Template(ctx context.Context) (string, error)
 	Encrypt(ctx context.Context, route string, filename string, password string) (string, error)
 	Decrypt(ctx context.Context, route string, filename string, password string) (string, error)
 }
@@ -24,10 +24,10 @@ func NewService() Service {
 	return googService{}
 }
 
-func (googService) Template(ctx context.Context) (string, error) {
-
-	return "template", nil
-}
+//func (googService) Template(ctx context.Context) (string, error) {
+//
+//	return "template", nil
+//}
 
 func DeriveKey(password, salt []byte, route string) ([]byte, []byte, error) {
 	if salt == nil {
