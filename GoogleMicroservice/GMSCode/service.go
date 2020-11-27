@@ -161,7 +161,7 @@ func getService() (*drive.Service, error) {
 
 type Service interface {
 	Files(ctx context.Context) ([2][]string, error)
-	Upload(ctx context.Context, fileName string) (string, error)
+	Upload(ctx context.Context, fileName string, route string) (string, error)
 	Download(ctx context.Context, fileId string) (string, error)
 }
 
@@ -195,10 +195,11 @@ func (googService) Files(ctx context.Context) ([2][]string, error) {
 	return temp, nil
 }
 
-func (googService) Upload(ctx context.Context, fileName string) (string, error) {
+func (googService) Upload(ctx context.Context, fileName string, route string) (string, error) {
 
+	fullPath := route+"/"+fileName
 	// Step 1. Open the file
-	f, err := os.Open(fileName)
+	f, err := os.Open(fullPath)
 
 	if err != nil {
 		panic(fmt.Sprintf("cannot open file: %v", err))
@@ -219,7 +220,7 @@ func (googService) Upload(ctx context.Context, fileName string) (string, error) 
 
 	// Step 4. Create the file and upload its content
 
-	file, err := createFile(service, fileName, http.DetectContentType(buffer), f, dir.Id)
+	file, err := createFile(service, fullPath, http.DetectContentType(buffer), f, dir.Id)
 
 	if err != nil {
 		panic(fmt.Sprintf("Could not create file: %v\n", err))

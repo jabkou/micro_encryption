@@ -26,7 +26,7 @@ func MakeFilesEndpoint(srv Service) endpoint.Endpoint {
 func MakeUploadEndpoint(srv Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(uploadRequest)
-		f, err := srv.Upload(ctx, req.Upload)
+		f, err := srv.Upload(ctx, req.Upload, req.Route)
 		if err != nil {
 			return uploadResponse{f}, nil
 		}
