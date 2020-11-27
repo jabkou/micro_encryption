@@ -231,7 +231,6 @@ func (googService) Upload(ctx context.Context, fileName string) (string, error) 
 
 func (googService) Download(ctx context.Context, fileId string) (string, error) {
 
-	//fileId := "1BIiF3Fgi3c7Rn9Tms-LWjR9CahBiKJZN"
 
 	srv, err := getUser()
 	if err != nil {
