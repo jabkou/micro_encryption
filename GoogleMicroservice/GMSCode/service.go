@@ -251,6 +251,9 @@ func (googService) Download(ctx context.Context, fileId string) (string, error) 
 	tok, _ := tokenFromFile("../data/token.json")
 
 	req, err := http.NewRequest("GET", "https://www.googleapis.com/drive/v3/files/" + fileId + "?alt=media", nil)
+	if err != nil {
+		log.Println("Error on request.\n[ERRO] -", err)
+	}
 
 	// add authorization header to the req
 	req.Header.Add("Authorization", tok.TokenType + " " + tok.AccessToken)
