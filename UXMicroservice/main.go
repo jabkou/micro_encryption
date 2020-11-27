@@ -12,7 +12,7 @@ import (
 	"syscall"
 )
 
-var port string = "8090"
+var port = "8090"
 
 func main() {
 	var (

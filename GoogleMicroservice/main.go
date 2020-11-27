@@ -12,9 +12,12 @@ import (
 	"syscall"
 )
 
+var port = "8080"
+
+
 func main() {
 	var (
-		httpAddr = flag.String("http", ":8080", "http listen address")
+		httpAddr = flag.String("http", ":"+port, "http listen address")
 	)
 	flag.Parse()
 	ctx := context.Background()
