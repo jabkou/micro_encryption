@@ -23,7 +23,7 @@ func getClient(config *oauth2.Config) *http.Client {
 	// The file token.json stores the user's access and refresh tokens, and is
 	// created automatically when the authorization flow completes for the first
 	// time.
-	tokFile := "token.json"
+	tokFile := "../data/token.json"
 	tok, err := tokenFromFile(tokFile)
 	if err != nil {
 		tok = getTokenFromWeb(config)
@@ -75,7 +75,7 @@ func saveToken(path string, token *oauth2.Token) {
 
 //validate user
 func validateUser() (*oauth2.Config, error){
-	b, err := ioutil.ReadFile("credentials.json")
+	b, err := ioutil.ReadFile("../data/credentials.json")
 	if err != nil {
 		log.Fatalf("Unable to read client secret file: %v", err)
 	}
@@ -134,7 +134,7 @@ func createFile(service *drive.Service, name string, mimeType string, content io
 }
 
 func getService() (*drive.Service, error) {
-	b, err := ioutil.ReadFile("credentials.json")
+	b, err := ioutil.ReadFile("../data/credentials.json")
 	if err != nil {
 		fmt.Printf("Unable to read credentials.json file. Err: %v\n", err)
 		return nil, err
@@ -248,7 +248,7 @@ func (googService) Download(ctx context.Context, fileId string) (string, error) 
 	}
 	defer f.Close()
 
-	tok, _ := tokenFromFile("token.json")
+	tok, _ := tokenFromFile("../data/token.json")
 
 	req, err := http.NewRequest("GET", "https://www.googleapis.com/drive/v3/files/" + fileId + "?alt=media", nil)
 
