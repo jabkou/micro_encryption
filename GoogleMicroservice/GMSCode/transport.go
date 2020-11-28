@@ -15,7 +15,7 @@ type filesResponse struct {
 
 type uploadRequest struct {
 	Upload string `json:"upload"`
-	Route string `json:"route"`
+	Route  string `json:"route"`
 }
 
 type uploadResponse struct {
@@ -48,11 +48,12 @@ func decodeUploadRequest(ctx context.Context, r *http.Request) (interface{}, err
 
 	route, ok := r.URL.Query()["route"]
 
-	if !ok || len(upload[0]) < 1 {
+	if !ok || len(route[0]) < 1 {
 		log.Println("Url Param 'key' is missing")
 	}
 
 	req.Route = route[0]
+
 	return req, nil
 }
 

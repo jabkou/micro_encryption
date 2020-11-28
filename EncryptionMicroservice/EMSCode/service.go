@@ -29,13 +29,13 @@ func NewService() Service {
 //	return "template", nil
 //}
 
-func DeriveKey(password, salt []byte, route string) ([]byte, []byte, error) {
+func DeriveKey(password, salt []byte, route string, fileName string) ([]byte, []byte, error) {
 	if salt == nil {
 		salt = make([]byte, 32)
 		if _, err := rand.Read(salt); err != nil {
 			return nil, nil, err
 		}
-		saltPath := route+"/salt"
+		saltPath := route+"/salts/salt-"+fileName
 		_ = ioutil.WriteFile(saltPath, salt, 0777)
 	}
 	key, err := scrypt.Key(password, salt, 1048576, 8, 1, 32)
@@ -62,7 +62,7 @@ func (googService) Encrypt(ctx context.Context, route string, filename string, p
 	//}
 
 	pass := []byte(password)
-	key, _, err := DeriveKey(pass, nil, route)
+	key, _, err := DeriveKey(pass, nil, route, filename)
 	if err != nil {
 		return "", err
 	}
@@ -79,7 +79,7 @@ func (googService) Encrypt(ctx context.Context, route string, filename string, p
 		log.Fatal(err)
 	}
 
-	outfilePath := route+"/"+filename+".bin"
+	outfilePath := route+"/encrypted/"+filename+".bin"
 	outfile, err := os.OpenFile(outfilePath, os.O_RDWR|os.O_CREATE, 0777)
 	if err != nil {
 		log.Fatal(err)
@@ -109,12 +109,12 @@ func (googService) Encrypt(ctx context.Context, route string, filename string, p
 	// Append the IV
 	outfile.Write(iv)
 
-	return "template", nil
+	return outfilePath, nil
 }
 
 func (googService) Decrypt(ctx context.Context, route string, filename string, password string) (string, error) {
 
-	fullPath := route+"/"+filename
+	fullPath := route+"/downloaded/"+filename
 
 	infile, err := os.Open(fullPath+".bin")
 	if err != nil {
@@ -126,9 +126,9 @@ func (googService) Decrypt(ctx context.Context, route string, filename string, p
 	// 32 bytes (AES-256)
 
 	pass := []byte(password)
-	saltPath := route+"/salt"
+	saltPath := route+"/salts/salt-"+filename
 	dat, _ := ioutil.ReadFile(saltPath)
-	key, _, err := DeriveKey(pass, dat, route)
+	key, _, err := DeriveKey(pass, dat, route, filename)
 	if err != nil {
 		return "", err
 	}
@@ -151,7 +151,8 @@ func (googService) Decrypt(ctx context.Context, route string, filename string, p
 		log.Fatal(err)
 	}
 
-	outfile, err := os.OpenFile(fullPath, os.O_RDWR|os.O_CREATE, 0777)
+	outPath := route+"/decrypted/"+filename
+	outfile, err := os.OpenFile(outPath, os.O_RDWR|os.O_CREATE, 0777)
 	if err != nil {
 		log.Fatal(err)
 	}

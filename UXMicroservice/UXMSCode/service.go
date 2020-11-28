@@ -9,6 +9,7 @@ import (
 type Service interface {
 	Template(ctx context.Context) (string, error)
 	EncryptAndUpload(ctx context.Context, password string, route string, fileName string) (string, error)
+	//DecryptAndDownload(ctx context.Context, password string, route string, fileName string) (string, error)
 }
 
 type uxService struct{}
@@ -25,7 +26,7 @@ func (uxService) Template(ctx context.Context) (string, error) {
 func (uxService) EncryptAndUpload(ctx context.Context, password string, route string, fileName string) (string, error) {
 
 
-	req1, err := http.NewRequest("GET", "localhost:8070/encrypt?route="+route+"&filename="+fileName+"&password="+password, nil)
+	req1, err := http.NewRequest("GET", "http://localhost:8070/encrypt?route="+route+"&filename="+fileName+"&password="+password, nil)
 	if err != nil {
 		log.Println("Error on request.\n[ERRO] -", err)
 	}
@@ -35,9 +36,9 @@ func (uxService) EncryptAndUpload(ctx context.Context, password string, route st
 	if err != nil {
 		log.Println("Error on response.\n[ERRO] -", err)
 	}
-	println(resp1)
+	println(resp1.Status)
 
-	req2, err := http.NewRequest("GET", "localhost:8080/upload?route="+route+"&filename="+fileName+"&password="+password, nil)
+	req2, err := http.NewRequest("GET", "http://localhost:8080/upload?upload="+fileName+".bin&route="+route, nil)
 	if err != nil {
 		log.Println("Error on request.\n[ERRO] -", err)
 	}
@@ -47,7 +48,7 @@ func (uxService) EncryptAndUpload(ctx context.Context, password string, route st
 	if err != nil {
 		log.Println("Error on response.\n[ERRO] -", err)
 	}
-	println(resp2)
+	println(resp2.Status)
 
 
 

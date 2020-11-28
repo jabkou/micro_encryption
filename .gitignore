@@ -22,4 +22,5 @@ token.json
 *.pdf
 *.xls
 *.txt
+data/
 

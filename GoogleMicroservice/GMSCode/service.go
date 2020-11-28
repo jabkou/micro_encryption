@@ -197,7 +197,7 @@ func (googService) Files(ctx context.Context) ([2][]string, error) {
 
 func (googService) Upload(ctx context.Context, fileName string, route string) (string, error) {
 
-	fullPath := route+"/"+fileName
+	fullPath := route+"/encrypted/"+fileName
 	// Step 1. Open the file
 	f, err := os.Open(fullPath)
 
@@ -220,7 +220,7 @@ func (googService) Upload(ctx context.Context, fileName string, route string) (s
 
 	// Step 4. Create the file and upload its content
 
-	file, err := createFile(service, fullPath, http.DetectContentType(buffer), f, dir.Id)
+	file, err := createFile(service, fileName, http.DetectContentType(buffer), f, dir.Id)
 
 	if err != nil {
 		panic(fmt.Sprintf("Could not create file: %v\n", err))

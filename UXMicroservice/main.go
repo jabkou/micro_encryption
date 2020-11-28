@@ -32,6 +32,7 @@ func main() {
 	// mapping endpoints
 	endpoints := UXMSCode.Endpoints{
 		TemplateEndpoint: UXMSCode.MakeTemplateEndpoint(srv),
+		EncryptAndUploadEndpoint: UXMSCode.MakeEncryptAndUploadEndpoint(srv),
 	}
 
 	// HTTP transport

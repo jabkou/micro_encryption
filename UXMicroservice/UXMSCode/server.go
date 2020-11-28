@@ -17,6 +17,11 @@ func NewHTTPServer(ctx context.Context, endpoints Endpoints) http.Handler {
 		decodeTemplateRequest,
 		encodeResponse))
 
+	r.Methods("GET").Path("/encryptAndUpload").Handler(httptransport.NewServer(
+		endpoints.EncryptAndUploadEndpoint,
+		decodeEncryptAndUploadRequest,
+		encodeResponse))
+
 	return r
 }
 
