@@ -27,7 +27,7 @@ func MakeEncryptionEndpoint(srv Service) endpoint.Endpoint {
 		req := request.(encryptionRequest)
 		f, err := srv.Encrypt(ctx, req.Route, req.Filename, req.Password)
 		if err != nil {
-			return encryptionResponse{f}, nil
+			return encryptionResponse{f}, err
 		}
 		return encryptionResponse{f}, nil
 	}
@@ -38,7 +38,7 @@ func MakeDecryptionEndpoint(srv Service) endpoint.Endpoint {
 		req := request.(decryptionRequest)
 		f, err := srv.Decrypt(ctx, req.Route, req.Filename, req.Password)
 		if err != nil {
-			return decryptionResponse{f}, nil
+			return decryptionResponse{f}, err
 		}
 		return decryptionResponse{f}, nil
 	}
@@ -58,18 +58,20 @@ func (e Endpoints) Encrypt(ctx context.Context) (string, error) {
 	req := encryptionRequest{}
 	resp, err := e.EncryptEndpoint(ctx, req)
 	if err != nil {
+		return "", err
 	}
 	response := resp.(encryptionResponse)
 
-	return response.Encryption, nil
+	return response.Response, nil
 }
 
 func (e Endpoints) Decrypt(ctx context.Context) (string, error) {
 	req := decryptionRequest{}
 	resp, err := e.DecryptEndpoint(ctx, req)
 	if err != nil {
+		return "", err
 	}
 	response := resp.(decryptionResponse)
 
-	return response.Decryption, nil
+	return response.Response, nil
 }

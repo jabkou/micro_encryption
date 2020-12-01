@@ -19,15 +19,24 @@ type uploadRequest struct {
 }
 
 type uploadResponse struct {
-	Upload string `json:"uploadResponse"`
+	Response string `json:"response"`
 }
 
 type downloadRequest struct {
 	Download string `json:"download"`
+	Route  string `json:"route"`
 }
 
 type downloadResponse struct {
-	Download string `json:"downloadResponse"`
+	Response string `json:"response"`
+}
+
+type getAuthCodeRequest struct {
+	AuthCode string `json:"authCode"`
+}
+
+type getAuthCodeResponse struct {
+	Response string `json:"response"`
 }
 
 func decodeFilesRequest(ctx context.Context, r *http.Request) (interface{}, error ) {
@@ -41,7 +50,7 @@ func decodeUploadRequest(ctx context.Context, r *http.Request) (interface{}, err
 	upload, ok := r.URL.Query()["upload"]
 
 	if !ok || len(upload[0]) < 1 {
-		log.Println("Url Param 'key' is missing")
+		log.Println("Url Param 'upload' is missing")
 	}
 
 	req.Upload = upload[0]
@@ -49,7 +58,7 @@ func decodeUploadRequest(ctx context.Context, r *http.Request) (interface{}, err
 	route, ok := r.URL.Query()["route"]
 
 	if !ok || len(route[0]) < 1 {
-		log.Println("Url Param 'key' is missing")
+		log.Println("Url Param 'route' is missing")
 	}
 
 	req.Route = route[0]
@@ -63,10 +72,32 @@ func decodeDownloadRequest(ctx context.Context, r *http.Request) (interface{}, e
 	download, ok := r.URL.Query()["download"]
 
 	if !ok || len(download[0]) < 1 {
-		log.Println("Url Param 'key' is missing")
+		log.Println("Url Param 'download' is missing")
 	}
 
 	req.Download = download[0]
+
+	route, ok := r.URL.Query()["route"]
+
+	if !ok || len(route[0]) < 1 {
+		log.Println("Url Param 'route' is missing")
+	}
+
+	req.Route = route[0]
+
+	return req, nil
+}
+
+func decodeGetAuthCodeRequest(ctx context.Context, r *http.Request) (interface{}, error ) {
+	var req getAuthCodeRequest
+
+	authCode, ok := r.URL.Query()["authCode"]
+
+	if !ok || len(authCode[0]) < 1 {
+		log.Println("Url Param 'authCode' is missing")
+	}
+
+	req.AuthCode = authCode[0]
 	return req, nil
 }
 

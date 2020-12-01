@@ -18,13 +18,13 @@ type Service interface {
 	Decrypt(ctx context.Context, route string, filename string, password string) (string, error)
 }
 
-type googService struct{}
+type encryptionService struct{}
 
 func NewService() Service {
-	return googService{}
+	return encryptionService{}
 }
 
-//func (googService) Template(ctx context.Context) (string, error) {
+//func (encryptionService) Template(ctx context.Context) (string, error) {
 //
 //	return "template", nil
 //}
@@ -45,12 +45,13 @@ func DeriveKey(password, salt []byte, route string, fileName string) ([]byte, []
 	return key, salt, nil
 }
 
-func (googService) Encrypt(ctx context.Context, route string, filename string, password string) (string, error) {
+func (encryptionService) Encrypt(ctx context.Context, route string, filename string, password string) (string, error) {
 
 	fullPath := route+"/"+filename
 	infile, err := os.Open(fullPath)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return "Error: "+err.Error(), err
 	}
 	defer infile.Close()
 
@@ -64,25 +65,28 @@ func (googService) Encrypt(ctx context.Context, route string, filename string, p
 	pass := []byte(password)
 	key, _, err := DeriveKey(pass, nil, route, filename)
 	if err != nil {
-		return "", err
+		return "Error: "+err.Error(), err
 	}
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		log.Panic(err)
+		log.Println(err)
+		return "Error: "+err.Error(), err
 	}
 
 	// Never use more than 2^32 random nonces with a given key
 	// because of the risk of repeat.
 	iv := make([]byte, block.BlockSize())
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return "Error: "+err.Error(), err
 	}
 
 	outfilePath := route+"/encrypted/"+filename+".bin"
 	outfile, err := os.OpenFile(outfilePath, os.O_RDWR|os.O_CREATE, 0777)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return "Error: "+err.Error(), err
 	}
 	defer outfile.Close()
 
@@ -109,16 +113,17 @@ func (googService) Encrypt(ctx context.Context, route string, filename string, p
 	// Append the IV
 	outfile.Write(iv)
 
-	return outfilePath, nil
+	return "OK", nil
 }
 
-func (googService) Decrypt(ctx context.Context, route string, filename string, password string) (string, error) {
+func (encryptionService) Decrypt(ctx context.Context, route string, filename string, password string) (string, error) {
 
 	fullPath := route+"/downloaded/"+filename
 
 	infile, err := os.Open(fullPath+".bin")
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return "Error: "+err.Error(), err
 	}
 	defer infile.Close()
 
@@ -127,34 +132,42 @@ func (googService) Decrypt(ctx context.Context, route string, filename string, p
 
 	pass := []byte(password)
 	saltPath := route+"/salts/salt-"+filename
-	dat, _ := ioutil.ReadFile(saltPath)
+	dat, err := ioutil.ReadFile(saltPath)
+	if err != nil {
+		log.Println(err)
+		return "Error: "+err.Error(), err
+	}
 	key, _, err := DeriveKey(pass, dat, route, filename)
 	if err != nil {
-		return "", err
+		return "Error: "+err.Error(), err
 	}
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		log.Panic(err)
+		log.Println(err)
+		return "Error: "+err.Error(), err
 	}
 
 	// Never use more than 2^32 random nonces with a given key
 	// because of the risk of repeat.
 	fi, err := infile.Stat()
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return "Error: "+err.Error(), err
 	}
 
 	iv := make([]byte, block.BlockSize())
 	msgLen := fi.Size() - int64(len(iv))
 	_, err = infile.ReadAt(iv, msgLen)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return "Error: "+err.Error(), err
 	}
 
 	outPath := route+"/decrypted/"+filename
 	outfile, err := os.OpenFile(outPath, os.O_RDWR|os.O_CREATE, 0777)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return "Error: "+err.Error(), err
 	}
 	defer outfile.Close()
 
@@ -184,5 +197,5 @@ func (googService) Decrypt(ctx context.Context, route string, filename string, p
 		}
 	}
 
-	return "template", nil
+	return "OK", nil
 }

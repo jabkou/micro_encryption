@@ -35,6 +35,7 @@ func main() {
 		FilesEndpoint:    GMSCode.MakeFilesEndpoint(srv),
 		UploadEndpoint:   GMSCode.MakeUploadEndpoint(srv),
 		DownloadEndpoint: GMSCode.MakeDownloadEndpoint(srv),
+		GetAuthCodeEndpoint: GMSCode.MakeGetAuthCodeEndpoint(srv),
 	}
 
 	// HTTP transport

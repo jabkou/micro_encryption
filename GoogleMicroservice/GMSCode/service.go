@@ -3,7 +3,6 @@ package GMSCode
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/drive/v3"
@@ -12,12 +11,15 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 type Pair struct {
 	name string
 	id string
 }
+var authCode string = ""
+
 // Retrieve a token, saves the token, then returns the generated client.
 func getClient(config *oauth2.Config) *http.Client {
 	// The file token.json stores the user's access and refresh tokens, and is
@@ -29,19 +31,46 @@ func getClient(config *oauth2.Config) *http.Client {
 		tok = getTokenFromWeb(config)
 		saveToken(tokFile, tok)
 	}
+
+	tokenSource := config.TokenSource(oauth2.NoContext, tok)
+	newToken, err := tokenSource.Token()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	if newToken.AccessToken != tok.AccessToken {
+		saveToken(tokFile, newToken)
+		log.Println("Saved new token:", newToken.AccessToken)
+	}
+
+
 	return config.Client(context.Background(), tok)
 }
 
 // Request a token from the web, then returns the retrieved token.
 func getTokenFromWeb(config *oauth2.Config) *oauth2.Token {
 	authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
-	fmt.Printf("Go to the following link in your browser then type the "+
+	log.Printf("Go to the following link in your browser then type the "+
 		"authorization code: \n%v\n", authURL)
 
-	var authCode string
-	if _, err := fmt.Scan(&authCode); err != nil {
-		log.Fatalf("Unable to read authorization code %v", err)
+
+	//if _, err := log.Scan(&authCode); err != nil {
+	//	log.Fatalf("Unable to read authorization code %v", err)
+	//}
+
+	var i = 0
+	for ; i < 100; {
+		i += 1
+		if authCode == "" {
+			time.Sleep(1 * time.Second)
+		} else {
+			break
+		}
 	}
+	if  authCode == "" {
+		log.Fatalf("Unable to read authorization code ")
+	}
+
 
 	tok, err := config.Exchange(context.TODO(), authCode)
 	if err != nil {
@@ -64,7 +93,7 @@ func tokenFromFile(file string) (*oauth2.Token, error) {
 
 // Saves a token to a file path.
 func saveToken(path string, token *oauth2.Token) {
-	fmt.Printf("Saving credential file to: %s\n", path)
+	log.Printf("Saving credential file to: %s\n", path)
 	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		log.Fatalf("Unable to cache oauth token: %v", err)
@@ -136,7 +165,7 @@ func createFile(service *drive.Service, name string, mimeType string, content io
 func getService() (*drive.Service, error) {
 	b, err := ioutil.ReadFile("../data/credentials.json")
 	if err != nil {
-		fmt.Printf("Unable to read credentials.json file. Err: %v\n", err)
+		log.Printf("Unable to read credentials.json file. Err: %v\n", err)
 		return nil, err
 	}
 
@@ -152,7 +181,7 @@ func getService() (*drive.Service, error) {
 	service, err := drive.New(client)
 
 	if err != nil {
-		fmt.Printf("Cannot create the Google Drive service: %v\n", err)
+		log.Printf("Cannot create the Google Drive service: %v\n", err)
 		return nil, err
 	}
 
@@ -162,7 +191,8 @@ func getService() (*drive.Service, error) {
 type Service interface {
 	Files(ctx context.Context) ([2][]string, error)
 	Upload(ctx context.Context, fileName string, route string) (string, error)
-	Download(ctx context.Context, fileId string) (string, error)
+	Download(ctx context.Context, fileId string, route string) (string, error)
+	GetAuthCode(ctx context.Context, authCode string) (string, error)
 }
 
 type googService struct{}
@@ -173,21 +203,25 @@ func NewService() Service {
 
 func (googService) Files(ctx context.Context) ([2][]string, error) {
 
-	srv, err := getUser()
-
 	var temp [2][]string
+	srv, err := getUser()
+	if err != nil {
+		log.Println("Error while getting user.\n[ERRO] -", err)
+		return temp, err
+	}
 
 	r, err := srv.Files.List().PageSize(10).
 		Fields("nextPageToken, files(id, name)").Do()
 	if err != nil {
-		log.Fatalf("Unable to retrieve files: %v", err)
+		log.Println("Unable to retrieve files: %v", err)
+		return temp, err
 	}
-	fmt.Println("Files:")
+	log.Println("Files:")
 	if len(r.Files) == 0 {
-		fmt.Println("No files found.")
+		log.Println("No files found.")
 	} else {
 		for _, i := range r.Files {
-			fmt.Printf("%s (%s)\n", i.Name, i.Id)
+			log.Printf("%s (%s)\n", i.Name, i.Id)
 			temp[0] = append(temp[0], i.Name)
 			temp[1] = append(temp[1], i.Id)
 		}
@@ -200,9 +234,9 @@ func (googService) Upload(ctx context.Context, fileName string, route string) (s
 	fullPath := route+"/encrypted/"+fileName
 	// Step 1. Open the file
 	f, err := os.Open(fullPath)
-
 	if err != nil {
-		panic(fmt.Sprintf("cannot open file: %v", err))
+		log.Println(err)
+		return "Error: "+err.Error(), err
 	}
 
 	defer f.Close()
@@ -210,12 +244,17 @@ func (googService) Upload(ctx context.Context, fileName string, route string) (s
 
 	// Step 2. Get the Google Drive service
 	service, err := getService()
+	if err != nil {
+		log.Println(err)
+		return "Error: "+err.Error(), err
+	}
 
 	// Step 3. Create the directory
 	dir, err := createDir(service, "My Folder", "root")
 
 	if err != nil {
-		panic(fmt.Sprintf("Could not create dir: %v\n", err))
+		log.Println(err)
+		return "Error: "+err.Error(), err
 	}
 
 	// Step 4. Create the file and upload its content
@@ -223,54 +262,73 @@ func (googService) Upload(ctx context.Context, fileName string, route string) (s
 	file, err := createFile(service, fileName, http.DetectContentType(buffer), f, dir.Id)
 
 	if err != nil {
-		panic(fmt.Sprintf("Could not create file: %v\n", err))
+		log.Println(err)
+		return "Error: "+err.Error(), err
 	}
 
-	fmt.Printf("File '%s' successfully uploaded in '%s' directory", file.Name,  dir.Name)
-	return "ukk", nil
+	log.Printf("File '%s' successfully uploaded in '%s' directory", file.Name,  dir.Name)
+	return "OK", nil
 }
 
-func (googService) Download(ctx context.Context, fileId string) (string, error) {
+func (googService) Download(ctx context.Context, fileId string, route string) (string, error) {
 
 
 	srv, err := getUser()
 	if err != nil {
-		panic(fmt.Sprintf("Could not cget user: %v\n", err))
+		log.Println(err)
+		return "Error: "+err.Error(), err
 	}
 
-	file, _ := srv.Files.Get(fileId).Do()
-
-	fmt.Println("Downloading file...")
-
-	f, err := os.Create(file.Name)
+	file, err := srv.Files.Get(fileId).Do()
 	if err != nil {
-		fmt.Printf("create file: %v", err)
+		log.Println(err)
+		return "Error: "+err.Error(), err
+	}
 
+
+	log.Println("Downloading file...")
+
+	fullPath := route+"/downloaded/"
+	f, err := os.Create(fullPath+file.Name)
+	if err != nil {
+		log.Printf("create file: %v", err)
+		return "Error: "+err.Error(), err
 	}
 	defer f.Close()
 
-	tok, _ := tokenFromFile("../data/token.json")
+	tok, err := tokenFromFile("../data/token.json")
+	if err != nil {
+		log.Printf("create file: %v", err)
+		return "Error: "+err.Error(), err
+	}
 
 	req, err := http.NewRequest("GET", "https://www.googleapis.com/drive/v3/files/" + fileId + "?alt=media", nil)
 	if err != nil {
 		log.Println("Error on request.\n[ERRO] -", err)
+		return "Error: "+err.Error(), err
 	}
 
 	// add authorization header to the req
 	req.Header.Add("Authorization", tok.TokenType + " " + tok.AccessToken)
-
 	// Send req using http Client
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Println("Error on response.\n[ERRO] -", err)
+		return "Error: "+err.Error(), err
 	}
 
 	_, err = io.Copy(f, resp.Body)
 	if err != nil {
-		panic(err)
+		log.Println(err)
+		return "Error: "+err.Error(), err
 	}
-	fmt.Println(resp.Status)
+	log.Println(resp.Status)
 
-	return "dkk", nil
+	return file.Name, nil
+}
+
+func (googService) GetAuthCode(ctx context.Context, authCodes string) (string, error) {
+	authCode = authCodes
+	return "OK", nil
 }

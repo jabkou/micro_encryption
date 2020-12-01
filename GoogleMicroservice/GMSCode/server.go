@@ -27,6 +27,11 @@ func NewHTTPServer(ctx context.Context, endpoints Endpoints) http.Handler {
 		decodeDownloadRequest,
 		encodeResponse))
 
+	r.Methods("GET").Path("/getAuthCode").Handler(httptransport.NewServer(
+		endpoints.GetAuthCodeEndpoint,
+		decodeGetAuthCodeRequest,
+		encodeResponse))
+
 	return r
 }
 

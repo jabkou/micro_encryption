@@ -12,14 +12,19 @@ func NewHTTPServer(ctx context.Context, endpoints Endpoints) http.Handler {
 	r := mux.NewRouter()
 	r.Use(commonMiddleware) // @see https://stackoverflow.com/a/51456342
 
-	r.Methods("GET").Path("/template").Handler(httptransport.NewServer(
-		endpoints.TemplateEndpoint,
-		decodeTemplateRequest,
-		encodeResponse))
+	//r.Methods("GET").Path("/template").Handler(httptransport.NewServer(
+	//	endpoints.TemplateEndpoint,
+	//	decodeTemplateRequest,
+	//	encodeResponse))
 
 	r.Methods("GET").Path("/encryptAndUpload").Handler(httptransport.NewServer(
 		endpoints.EncryptAndUploadEndpoint,
 		decodeEncryptAndUploadRequest,
+		encodeResponse))
+
+	r.Methods("GET").Path("/decryptAndDownload").Handler(httptransport.NewServer(
+		endpoints.DecryptAndDownloadEndpoint,
+		decodeDecryptAndDownload,
 		encodeResponse))
 
 	return r

@@ -26,11 +26,11 @@ type decryptionRequest struct {
 //}
 
 type encryptionResponse struct {
-	Encryption string `json:"encryption"`
+	Response string `json:"response"`
 }
 
 type decryptionResponse struct {
-	Decryption string `json:"decryption"`
+	Response string `json:"response"`
 }
 
 //func decodeTemplateRequest(ctx context.Context, r *http.Request) (interface{}, error ) {
@@ -43,17 +43,17 @@ func decodeEncryptionRequest(ctx context.Context, r *http.Request) (interface{},
 
 	route, ok := r.URL.Query()["route"]
 	if !ok || len(route[0]) < 1 {
-		log.Println("Url Param 'key' is missing")
+		log.Println("Url Param 'route' is missing")
 	}
 
 	filename, ok := r.URL.Query()["filename"]
 	if !ok || len(filename[0]) < 1 {
-		log.Println("Url Param 'key' is missing")
+		log.Println("Url Param 'filename' is missing")
 	}
 
 	password, ok := r.URL.Query()["password"]
 	if !ok || len(password[0]) < 1 {
-		log.Println("Url Param 'key' is missing")
+		log.Println("Url Param 'password' is missing")
 	}
 
 	req.Route = route[0]
@@ -68,17 +68,17 @@ func decodeDecryptionRequest(ctx context.Context, r *http.Request) (interface{},
 
 	route, ok := r.URL.Query()["route"]
 	if !ok || len(route[0]) < 1 {
-		log.Println("Url Param 'key' is missing")
+		log.Println("Url Param 'route' is missing")
 	}
 
 	filename, ok := r.URL.Query()["filename"]
 	if !ok || len(filename[0]) < 1 {
-		log.Println("Url Param 'key' is missing")
+		log.Println("Url Param 'filename' is missing")
 	}
 
 	password, ok := r.URL.Query()["password"]
 	if !ok || len(password[0]) < 1 {
-		log.Println("Url Param 'key' is missing")
+		log.Println("Url Param 'password' is missing")
 	}
 
 	req.Route = route[0]
