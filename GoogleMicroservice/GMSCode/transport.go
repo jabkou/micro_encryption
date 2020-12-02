@@ -10,7 +10,7 @@ import (
 type filesRequest struct {}
 
 type filesResponse struct {
-	Files [2][]string `json:"files"`
+	Files [][]string `json:"files"`
 }
 
 type uploadRequest struct {

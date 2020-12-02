@@ -57,11 +57,11 @@ func MakeGetAuthCodeEndpoint(srv Service) endpoint.Endpoint {
 	}
 }
 
-func (e Endpoints) Files(ctx context.Context) ([2][]string, error) {
+func (e Endpoints) Files(ctx context.Context) ([][]string, error) {
 	req := filesRequest{}
 	resp, err := e.FilesEndpoint(ctx, req)
 	if err != nil {
-		return [2][]string{}, err
+		return [][]string{}, err
 	}
 	filesResp := resp.(filesResponse)
 

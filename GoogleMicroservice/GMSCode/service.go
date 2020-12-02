@@ -190,7 +190,7 @@ func getService() (*drive.Service, error) {
 }
 
 type Service interface {
-	Files(ctx context.Context) ([2][]string, error)
+	Files(ctx context.Context) ([][]string, error)
 	Upload(ctx context.Context, fileName string, route string) (string, error)
 	Download(ctx context.Context, fileId string, route string) (string, error)
 	GetAuthCode(ctx context.Context, authCode string) (string, error)
@@ -202,14 +202,13 @@ func NewService() Service {
 	return googService{}
 }
 
-func (googService) Files(ctx context.Context) ([2][]string, error) {
+func (googService) Files(ctx context.Context) ([][]string, error) {
 
-	var temp [2][]string
 	srv, err := getUser()
 	if err != nil {
 		log.Println("Error while getting user.\n[ERRO] -", err)
 		err = errors.New("error on getting user")
-		return temp, err
+		return nil, err
 	}
 
 	r, err := srv.Files.List().PageSize(10).
@@ -217,19 +216,33 @@ func (googService) Files(ctx context.Context) ([2][]string, error) {
 	if err != nil {
 		log.Printf("Unable to retrieve files: %v\n", err)
 		err = errors.New("error on retrieving files")
-		return temp, err
+		return nil, err
 	}
+
+	var constant = len(r.Files)
+	board := make([]string, constant*2)
+	slice := make([][]string, len(board)/2)
+
 	log.Println("Files:")
 	if len(r.Files) == 0 {
 		log.Println("No files found.")
 	} else {
-		for _, i := range r.Files {
+		for x, i := range r.Files {
 			log.Printf("%s (%s)\n", i.Name, i.Id)
-			temp[0] = append(temp[0], i.Name)
-			temp[1] = append(temp[1], i.Id)
+			//temp[x][0] = append(temp[x][0], i.Name)
+			//temp[1][0] = i.Name
+			//temp[x] = append(temp[x][1], i.Id)
+			//temp[1][1] = i.Id
+			board[x*2 + 0] = i.Name // like board[i][j] = "abc"
+			board[x*2 + 1] = i.Id // like board[i][j] = "abc"
+
 		}
 	}
-	return temp, nil
+
+	for i := range slice {
+		slice[i] = board[i * 2:(i + 1) * 2]
+	}
+	return slice, nil
 }
 
 func (googService) Upload(ctx context.Context, fileName string, route string) (string, error) {
@@ -255,23 +268,24 @@ func (googService) Upload(ctx context.Context, fileName string, route string) (s
 	}
 
 	// Step 3. Create the directory
-	dir, err := createDir(service, "My Folder", "root")
-	if err != nil {
-		log.Println(err)
-		err = errors.New("error while creating dir")
-		return "Error while creating dir", err
-	}
+	//dir, err := createDir(service, "My Folder", "root")
+
+	//if err != nil {
+	//	log.Println(err)
+	//	err = errors.New("error while creating dir")
+	//	return "Error while creating dir", err
+	//}
 
 	// Step 4. Create the file and upload its content
 
-	file, err := createFile(service, fileName, http.DetectContentType(buffer), f, dir.Id)
+	file, err := createFile(service, fileName, http.DetectContentType(buffer), f, "root")
 	if err != nil {
 		log.Println(err)
 		err = errors.New("error while creating file")
 		return "Error while creating file", err
 	}
 
-	log.Printf("File '%s' successfully uploaded in '%s' directory", file.Name,  dir.Name)
+	log.Printf("File '%s' successfully uploaded in root directory", file.Name)
 	return "OK", nil
 }
 
