@@ -5,6 +5,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"errors"
 	"golang.org/x/crypto/scrypt"
 	"io"
 	"io/ioutil"
@@ -51,27 +52,23 @@ func (encryptionService) Encrypt(ctx context.Context, route string, filename str
 	infile, err := os.Open(fullPath)
 	if err != nil {
 		log.Println(err)
-		return "Error: "+err.Error(), err
+		err = errors.New("error while opening file")
+		return "Error while opening file", err
 	}
 	defer infile.Close()
-
-	// The key should be 16 bytes (AES-128), 24 bytes (AES-192) or
-	// 32 bytes (AES-256)
-	//key, err := ioutil.ReadFile("key")
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
 
 	pass := []byte(password)
 	key, _, err := DeriveKey(pass, nil, route, filename)
 	if err != nil {
-		return "Error: "+err.Error(), err
+		err = errors.New("error while deriving key")
+		return "Error while deriving key", err
 	}
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		log.Println(err)
-		return "Error: "+err.Error(), err
+		err = errors.New("error while making block")
+		return "Error while making block", err
 	}
 
 	// Never use more than 2^32 random nonces with a given key
@@ -79,14 +76,16 @@ func (encryptionService) Encrypt(ctx context.Context, route string, filename str
 	iv := make([]byte, block.BlockSize())
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
 		log.Println(err)
-		return "Error: "+err.Error(), err
+		err = errors.New("error while encrypting")
+		return "Error while encrypting", err
 	}
 
 	outfilePath := route+"/encrypted/"+filename+".bin"
 	outfile, err := os.OpenFile(outfilePath, os.O_RDWR|os.O_CREATE, 0777)
 	if err != nil {
 		log.Println(err)
-		return "Error: "+err.Error(), err
+		err = errors.New("error while saving to file")
+		return "Error while saving to file", err
 	}
 	defer outfile.Close()
 
@@ -123,7 +122,8 @@ func (encryptionService) Decrypt(ctx context.Context, route string, filename str
 	infile, err := os.Open(fullPath+".bin")
 	if err != nil {
 		log.Println(err)
-		return "Error: "+err.Error(), err
+		err = errors.New("error while opening file")
+		return "Error while opening file", err
 	}
 	defer infile.Close()
 
@@ -135,16 +135,20 @@ func (encryptionService) Decrypt(ctx context.Context, route string, filename str
 	dat, err := ioutil.ReadFile(saltPath)
 	if err != nil {
 		log.Println(err)
-		return "Error: "+err.Error(), err
+		err = errors.New("error while reading salt file")
+		return "Error while reading salt file", err
 	}
 	key, _, err := DeriveKey(pass, dat, route, filename)
 	if err != nil {
-		return "Error: "+err.Error(), err
+		log.Println(err)
+		err = errors.New("error while deriving key")
+		return "Error while deriving key", err
 	}
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		log.Println(err)
-		return "Error: "+err.Error(), err
+		err = errors.New("error while getting block")
+		return "Error while getting block", err
 	}
 
 	// Never use more than 2^32 random nonces with a given key
@@ -152,7 +156,8 @@ func (encryptionService) Decrypt(ctx context.Context, route string, filename str
 	fi, err := infile.Stat()
 	if err != nil {
 		log.Println(err)
-		return "Error: "+err.Error(), err
+		err = errors.New("error")
+		return "Error", err
 	}
 
 	iv := make([]byte, block.BlockSize())
@@ -160,14 +165,16 @@ func (encryptionService) Decrypt(ctx context.Context, route string, filename str
 	_, err = infile.ReadAt(iv, msgLen)
 	if err != nil {
 		log.Println(err)
-		return "Error: "+err.Error(), err
+		err = errors.New("error while decrypting")
+		return "Error while decrypting", err
 	}
 
 	outPath := route+"/decrypted/"+filename
 	outfile, err := os.OpenFile(outPath, os.O_RDWR|os.O_CREATE, 0777)
 	if err != nil {
 		log.Println(err)
-		return "Error: "+err.Error(), err
+		err = errors.New("error while saving to file")
+		return "Error while saving to file", err
 	}
 	defer outfile.Close()
 

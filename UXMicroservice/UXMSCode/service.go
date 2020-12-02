@@ -33,27 +33,30 @@ func (uxService) EncryptAndUpload(ctx context.Context, password string, route st
 	req1, err := http.NewRequest("GET", "http://localhost:8070/encrypt?route="+route+"&filename="+fileName+"&password="+password, nil)
 	if err != nil {
 		log.Println("Error on request.\n[ERRO] -", err)
-		return "Error on request: "+err.Error(), err
+		err = errors.New("error on request")
+		return "Error on request", err
 	}
 
 	client1 := &http.Client{}
 	resp1, err := client1.Do(req1)
 	if err != nil || resp1 == nil || resp1.StatusCode != 200 {
 		log.Println("Error on response.\n[ERRO] -", err)
-		err = errors.New("Error")
+		err = errors.New("error on response")
 		return "Error on response", err
 	}
 
 	req2, err := http.NewRequest("GET", "http://localhost:8080/upload?upload="+fileName+".bin&route="+route, nil)
 	if err != nil {
 		log.Println("Error on request.\n[ERRO] -", err)
-		return "Error on request: "+err.Error(), err
+		err = errors.New("error on request")
+		return "Error on request", err
 	}
 
 	client2 := &http.Client{}
 	resp2, err := client2.Do(req2)
 	if err != nil || resp2 == nil || resp2.StatusCode != 200 {
 		log.Println("Error on response.\n[ERRO] -", err)
+		err = errors.New("error on response")
 		return "Error on response", err
 	}
 
@@ -66,21 +69,24 @@ func (uxService) DecryptAndDownload(ctx context.Context, password string, route 
 	req1, err := http.NewRequest("GET", "http://localhost:8080/download?download="+fileId+"&route="+route, nil)
 	if err != nil {
 		log.Println("Error on request.\n[ERRO] -", err)
-		return "Error on request: "+err.Error(), err
+		err = errors.New("error on request")
+		return "Error on request", err
 	}
 
 	client1 := &http.Client{}
 	resp1, err := client1.Do(req1)
 	if err != nil || resp1 == nil || resp1.StatusCode != 200 {
 		log.Println("Error on response.\n[ERRO] -", err)
-		return "Error on response: ", err
+		err = errors.New("error on response")
+		return "Error on response", err
 	}
 
 	defer resp1.Body.Close()
 	body, err := ioutil.ReadAll(resp1.Body)
 	if err != nil {
 		log.Println("Error on reading body.\n[ERRO] -", err)
-		return "Error: "+err.Error(), err
+		err = errors.New("error on reading body")
+		return "Error on reading body", err
 	}
 	body2 := string(body)
 
@@ -97,13 +103,15 @@ func (uxService) DecryptAndDownload(ctx context.Context, password string, route 
 	req2, err := http.NewRequest("GET", "http://localhost:8070/decrypt?route="+route+"&filename="+fileName+"&password="+password, nil)
 	if err != nil {
 		log.Println("Error on request.\n[ERRO] -", err)
-		return "Error: "+err.Error(), err
+		err = errors.New("error on request")
+		return "Error on request", err
 	}
 
 	client2 := &http.Client{}
 	resp2, err := client2.Do(req2)
 	if err != nil || resp2 == nil || resp2.StatusCode != 200 {
 		log.Println("Error on response.\n[ERRO] -", err)
+		err = errors.New("error on response")
 		return "Error on response", err
 	}
 	println(resp2.Status)

@@ -3,6 +3,7 @@ package GMSCode
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/drive/v3"
@@ -207,13 +208,15 @@ func (googService) Files(ctx context.Context) ([2][]string, error) {
 	srv, err := getUser()
 	if err != nil {
 		log.Println("Error while getting user.\n[ERRO] -", err)
+		err = errors.New("error on getting user")
 		return temp, err
 	}
 
 	r, err := srv.Files.List().PageSize(10).
 		Fields("nextPageToken, files(id, name)").Do()
 	if err != nil {
-		log.Println("Unable to retrieve files: %v", err)
+		log.Printf("Unable to retrieve files: %v\n", err)
+		err = errors.New("error on retrieving files")
 		return temp, err
 	}
 	log.Println("Files:")
@@ -236,7 +239,8 @@ func (googService) Upload(ctx context.Context, fileName string, route string) (s
 	f, err := os.Open(fullPath)
 	if err != nil {
 		log.Println(err)
-		return "Error: "+err.Error(), err
+		err = errors.New("error while opening file")
+		return "Error while opening file", err
 	}
 
 	defer f.Close()
@@ -246,24 +250,25 @@ func (googService) Upload(ctx context.Context, fileName string, route string) (s
 	service, err := getService()
 	if err != nil {
 		log.Println(err)
-		return "Error: "+err.Error(), err
+		err = errors.New("error while getting service")
+		return "Error  while getting service", err
 	}
 
 	// Step 3. Create the directory
 	dir, err := createDir(service, "My Folder", "root")
-
 	if err != nil {
 		log.Println(err)
-		return "Error: "+err.Error(), err
+		err = errors.New("error while creating dir")
+		return "Error while creating dir", err
 	}
 
 	// Step 4. Create the file and upload its content
 
 	file, err := createFile(service, fileName, http.DetectContentType(buffer), f, dir.Id)
-
 	if err != nil {
 		log.Println(err)
-		return "Error: "+err.Error(), err
+		err = errors.New("error while creating file")
+		return "Error while creating file", err
 	}
 
 	log.Printf("File '%s' successfully uploaded in '%s' directory", file.Name,  dir.Name)
@@ -276,13 +281,15 @@ func (googService) Download(ctx context.Context, fileId string, route string) (s
 	srv, err := getUser()
 	if err != nil {
 		log.Println(err)
-		return "Error: "+err.Error(), err
+		err = errors.New("error while getting user")
+		return "Error while getting user", err
 	}
 
 	file, err := srv.Files.Get(fileId).Do()
 	if err != nil {
 		log.Println(err)
-		return "Error: "+err.Error(), err
+		err = errors.New("error while getting file data")
+		return "Error while getting file data", err
 	}
 
 
@@ -292,20 +299,23 @@ func (googService) Download(ctx context.Context, fileId string, route string) (s
 	f, err := os.Create(fullPath+file.Name)
 	if err != nil {
 		log.Printf("create file: %v", err)
-		return "Error: "+err.Error(), err
+		err = errors.New("error while creating file")
+		return "Error while creating file", err
 	}
 	defer f.Close()
 
 	tok, err := tokenFromFile("../data/token.json")
 	if err != nil {
 		log.Printf("create file: %v", err)
-		return "Error: "+err.Error(), err
+		err = errors.New("error while getting token")
+		return "Error while getting token", err
 	}
 
 	req, err := http.NewRequest("GET", "https://www.googleapis.com/drive/v3/files/" + fileId + "?alt=media", nil)
 	if err != nil {
 		log.Println("Error on request.\n[ERRO] -", err)
-		return "Error: "+err.Error(), err
+		err = errors.New("error on request")
+		return "Error on request", err
 	}
 
 	// add authorization header to the req
@@ -315,13 +325,15 @@ func (googService) Download(ctx context.Context, fileId string, route string) (s
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Println("Error on response.\n[ERRO] -", err)
-		return "Error: "+err.Error(), err
+		err = errors.New("error on response")
+		return "Error on response", err
 	}
 
 	_, err = io.Copy(f, resp.Body)
 	if err != nil {
 		log.Println(err)
-		return "Error: "+err.Error(), err
+		err = errors.New("error while copying from response to file")
+		return "Error while copying from response to file", err
 	}
 	log.Println(resp.Status)
 
