@@ -26,7 +26,7 @@ func getClient(config *oauth2.Config) *http.Client {
 	// The file token.json stores the user's access and refresh tokens, and is
 	// created automatically when the authorization flow completes for the first
 	// time.
-	tokFile := "../data/token.json"
+	tokFile := "../data/config/token.json"
 	tok, err := tokenFromFile(tokFile)
 	if err != nil {
 		tok = getTokenFromWeb(config)
@@ -105,7 +105,7 @@ func saveToken(path string, token *oauth2.Token) {
 
 //validate user
 func validateUser() (*oauth2.Config, error){
-	b, err := ioutil.ReadFile("../data/credentials.json")
+	b, err := ioutil.ReadFile("../data/config/credentials.json")
 	if err != nil {
 		log.Fatalf("Unable to read client secret file: %v", err)
 	}
@@ -164,7 +164,7 @@ func createFile(service *drive.Service, name string, mimeType string, content io
 }
 
 func getService() (*drive.Service, error) {
-	b, err := ioutil.ReadFile("../data/credentials.json")
+	b, err := ioutil.ReadFile("../data/config/credentials.json")
 	if err != nil {
 		log.Printf("Unable to read credentials.json file. Err: %v\n", err)
 		return nil, err
@@ -229,13 +229,8 @@ func (googService) Files(ctx context.Context) ([][]string, error) {
 	} else {
 		for x, i := range r.Files {
 			log.Printf("%s (%s)\n", i.Name, i.Id)
-			//temp[x][0] = append(temp[x][0], i.Name)
-			//temp[1][0] = i.Name
-			//temp[x] = append(temp[x][1], i.Id)
-			//temp[1][1] = i.Id
 			board[x*2 + 0] = i.Name // like board[i][j] = "abc"
 			board[x*2 + 1] = i.Id // like board[i][j] = "abc"
-
 		}
 	}
 
@@ -318,7 +313,7 @@ func (googService) Download(ctx context.Context, fileId string, route string) (s
 	}
 	defer f.Close()
 
-	tok, err := tokenFromFile("../data/token.json")
+	tok, err := tokenFromFile("../data/config/token.json")
 	if err != nil {
 		log.Printf("create file: %v", err)
 		err = errors.New("error while getting token")
