@@ -12,6 +12,7 @@
 
 .DS_Store
 .idea/*
+.idea/
 
 
 #secret files from google

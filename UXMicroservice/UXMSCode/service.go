@@ -10,6 +10,8 @@ import (
 	"strings"
 )
 
+var address = "192.168.137.175"
+
 type Service interface {
 	//Template(ctx context.Context) (string, error)
 	EncryptAndUpload(ctx context.Context, password string, route string, fileName string) (string, error)
@@ -30,7 +32,7 @@ func NewService() Service {
 func (uxService) EncryptAndUpload(ctx context.Context, password string, route string, fileName string) (string, error) {
 
 
-	req1, err := http.NewRequest("GET", "http://localhost:8070/encrypt?route="+route+"&filename="+fileName+"&password="+password, nil)
+	req1, err := http.NewRequest("GET", "http://"+address+":8070/encrypt?route="+route+"&filename="+fileName+"&password="+password, nil)
 	if err != nil {
 		log.Println("Error on request.\n[ERRO] -", err)
 		err = errors.New("error on request")
@@ -45,7 +47,7 @@ func (uxService) EncryptAndUpload(ctx context.Context, password string, route st
 		return "Error on response", err
 	}
 
-	req2, err := http.NewRequest("GET", "http://localhost:8080/upload?upload="+fileName+".bin&route="+route, nil)
+	req2, err := http.NewRequest("GET", "http://"+address+":8080/upload?upload="+fileName+".bin&route="+route, nil)
 	if err != nil {
 		log.Println("Error on request.\n[ERRO] -", err)
 		err = errors.New("error on request")
@@ -66,7 +68,7 @@ func (uxService) EncryptAndUpload(ctx context.Context, password string, route st
 func (uxService) DecryptAndDownload(ctx context.Context, password string, route string, fileId string) (string, error) {
 
 
-	req1, err := http.NewRequest("GET", "http://localhost:8080/download?download="+fileId+"&route="+route, nil)
+	req1, err := http.NewRequest("GET", "http://"+address+":8080/download?download="+fileId+"&route="+route, nil)
 	if err != nil {
 		log.Println("Error on request.\n[ERRO] -", err)
 		err = errors.New("error on request")
@@ -100,7 +102,7 @@ func (uxService) DecryptAndDownload(ctx context.Context, password string, route 
 	fileName := strings.Trim(body3, ":\" .bin\"")
 
 
-	req2, err := http.NewRequest("GET", "http://localhost:8070/decrypt?route="+route+"&filename="+fileName+"&password="+password, nil)
+	req2, err := http.NewRequest("GET", "http://"+address+":8070/decrypt?route="+route+"&filename="+fileName+"&password="+password, nil)
 	if err != nil {
 		log.Println("Error on request.\n[ERRO] -", err)
 		err = errors.New("error on request")
