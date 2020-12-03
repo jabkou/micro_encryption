@@ -10,6 +10,7 @@ type Endpoints struct {
 	UploadEndpoint		endpoint.Endpoint
 	DownloadEndpoint	endpoint.Endpoint
 	GetAuthCodeEndpoint	endpoint.Endpoint
+	GetUrlEndpoint		endpoint.Endpoint
 }
 
 
@@ -57,6 +58,17 @@ func MakeGetAuthCodeEndpoint(srv Service) endpoint.Endpoint {
 	}
 }
 
+func MakeGetUrlEndpoint(srv Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		_ = request.(getUrlRequest)
+		f, err := srv.GetUrl(ctx)
+		if err != nil {
+			return getUrlResponse{f}, err
+		}
+		return getUrlResponse{f}, nil
+	}
+}
+
 func (e Endpoints) Files(ctx context.Context) ([][]string, error) {
 	req := filesRequest{}
 	resp, err := e.FilesEndpoint(ctx, req)
@@ -99,4 +111,15 @@ func (e Endpoints) GetAuthCode(ctx context.Context) (string, error) {
 	downloadResp := resp.(getAuthCodeResponse)
 
 	return downloadResp.Response, nil
+}
+
+func (e Endpoints) GetUrl(ctx context.Context) (string, error) {
+	req := getUrlRequest{}
+	resp, err := e.GetUrlEndpoint(ctx, req)
+	if err != nil {
+		return "", err
+	}
+	filesResp := resp.(getUrlResponse)
+
+	return filesResp.Response, nil
 }

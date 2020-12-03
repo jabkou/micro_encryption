@@ -20,6 +20,7 @@ type Pair struct {
 	id string
 }
 var authCode string = ""
+var authUrl string = ""
 
 // Retrieve a token, saves the token, then returns the generated client.
 func getClient(config *oauth2.Config) *http.Client {
@@ -53,6 +54,7 @@ func getTokenFromWeb(config *oauth2.Config) *oauth2.Token {
 	authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
 	log.Printf("Go to the following link in your browser then type the "+
 		"authorization code: \n%v\n", authURL)
+	authUrl = authURL
 
 
 	//if _, err := log.Scan(&authCode); err != nil {
@@ -194,6 +196,7 @@ type Service interface {
 	Upload(ctx context.Context, fileName string, route string) (string, error)
 	Download(ctx context.Context, fileId string, route string) (string, error)
 	GetAuthCode(ctx context.Context, authCode string) (string, error)
+	GetUrl(ctx context.Context) (string, error)
 }
 
 type googService struct{}
@@ -352,4 +355,8 @@ func (googService) Download(ctx context.Context, fileId string, route string) (s
 func (googService) GetAuthCode(ctx context.Context, authCodes string) (string, error) {
 	authCode = authCodes
 	return "OK", nil
+}
+
+func (googService) GetUrl(ctx context.Context) (string, error) {
+	return authUrl, nil
 }

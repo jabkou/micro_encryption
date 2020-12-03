@@ -39,6 +39,12 @@ type getAuthCodeResponse struct {
 	Response string `json:"response"`
 }
 
+type getUrlRequest struct {}
+
+type getUrlResponse struct {
+	Response string `json:"response"`
+}
+
 func decodeFilesRequest(ctx context.Context, r *http.Request) (interface{}, error ) {
 	var req filesRequest
 	return req, nil
@@ -98,6 +104,11 @@ func decodeGetAuthCodeRequest(ctx context.Context, r *http.Request) (interface{}
 	}
 
 	req.AuthCode = authCode[0]
+	return req, nil
+}
+
+func decodeGetUrlRequest(ctx context.Context, r *http.Request) (interface{}, error ) {
+	var req getUrlRequest
 	return req, nil
 }
 

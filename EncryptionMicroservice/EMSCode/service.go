@@ -71,8 +71,6 @@ func (encryptionService) Encrypt(ctx context.Context, route string, filename str
 		return "Error while making block", err
 	}
 
-	// Never use more than 2^32 random nonces with a given key
-	// because of the risk of repeat.
 	iv := make([]byte, block.BlockSize())
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
 		log.Println(err)
